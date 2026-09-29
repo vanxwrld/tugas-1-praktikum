@@ -1,36 +1,70 @@
 // src/components/CategoryPicker.js
+// Themed category selector — grid chips, accessible radio
+
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function CategoryPicker({ options, selected, onSelect, disabled }) {
+  const { colors, spacing, radius, typography } = useTheme();
+
   return (
-    <View>
-      {options.map((k) => (
-        <Pressable
-          key={String(k.id)}
-          accessibilityRole="radio"
-          accessibilityState={{ checked: selected === k.id }}
-          disabled={disabled}
-          onPress={() => onSelect(k.id)}
-          style={[s.choice, selected === k.id && s.chosen]}
-        >
-          <Text>{selected === k.id ? '(x) ' : '( ) '}{k.nama}</Text>
-        </Pressable>
-      ))}
+    <View accessibilityRole="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginBottom: spacing[4] }}>
+      {options.map((k) => {
+        const isSelected = selected === k.id;
+        return (
+          <Pressable
+            key={String(k.id)}
+            accessibilityRole="radio"
+            accessibilityLabel={`Kategori ${k.nama}`}
+            accessibilityState={{ checked: isSelected, disabled }}
+            disabled={disabled}
+            onPress={() => onSelect(k.id)}
+            style={({ pressed }) => [
+              s.chip,
+              {
+                backgroundColor: isSelected ? colors.primaryLight : colors.surface,
+                borderColor: isSelected ? colors.primary : colors.border,
+                borderWidth: isSelected ? 2 : 1,
+                borderRadius: radius.full,
+                paddingVertical: spacing[2],
+                paddingHorizontal: spacing[4],
+                minHeight: 44,
+                opacity: pressed ? 0.85 : (disabled ? 0.5 : 1),
+              },
+            ]}
+            android_ripple={{ color: colors.primary + '22' }}
+          >
+            {isSelected && (
+              <View style={[s.check, { backgroundColor: colors.primary, borderRadius: radius.full }]}>
+                <Text style={{ color: colors.onPrimary, fontSize: 10, fontWeight: '700' }}>✓</Text>
+              </View>
+            )}
+            <Text
+              style={{
+                color: isSelected ? colors.primary : colors.onSurfaceVariant,
+                fontSize: typography.fontSize.sm,
+                fontWeight: isSelected ? typography.fontWeight.semibold : typography.fontWeight.medium,
+              }}
+            >
+              {k.nama}
+            </Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  choice: {
-    padding: 12,
-    minHeight: 48,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#64748B',
-    borderRadius: 8,
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  chosen: {
-    backgroundColor: '#CCFBF1',
-    borderColor: '#0F766E',
+  check: {
+    width: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

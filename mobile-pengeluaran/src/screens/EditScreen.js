@@ -1,12 +1,16 @@
 // src/screens/EditScreen.js
-import { View, Text, ScrollView, ActivityIndicator, Alert } from 'react-native';
+// Themed Edit screen — pre-filled form, validation, loading states
+
+import { View, Text, ScrollView, ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { useState, useEffect } from 'react';
+import { useTheme } from '../theme/ThemeContext';
 import { api } from '../api';
 import { validate } from '../helpers';
 import { Tombol } from '../components/Button';
 import { Field } from '../components/Field';
 
 export function EditScreen({ route, navigation }) {
+  const { colors, spacing, typography } = useTheme();
   const { id, judul: initialJudul, nominal: initialNominal } = route.params;
   const [judul, setJudul] = useState(initialJudul);
   const [nominal, setNominal] = useState(String(initialNominal));
@@ -43,10 +47,25 @@ export function EditScreen({ route, navigation }) {
   }
 
   return (
-    <ScrollView style={s.page} keyboardShouldPersistTaps="handled">
-      <Text style={s.heading}>Ubah pengeluaran</Text>
-      {error ? <Text style={s.error}>{error}</Text> : null}
-      {busy ? <ActivityIndicator size="large" /> : null}
+    <ScrollView
+      style={[s.page, { backgroundColor: colors.background }]}
+      keyboardShouldPersistTaps="handled"
+      contentContainerStyle={{ paddingBottom: spacing[6] }}
+    >
+      <Text style={[s.heading, { color: colors.onSurface, fontSize: typography.fontSize['2xl'], fontWeight: typography.fontWeight.bold, marginBottom: spacing[4] }]}>
+        Ubah pengeluaran
+      </Text>
+      {error && (
+        <View style={[s.errorBanner, { backgroundColor: colors.errorLight, borderColor: colors.error, borderWidth: 1, borderRadius: 8, padding: spacing[3], marginBottom: spacing[4] }]}>
+          <Text style={{ color: colors.error, fontSize: typography.fontSize.sm }}>{error}</Text>
+        </View>
+      )}
+      {busy && (
+        <View style={[s.loadingBanner, { backgroundColor: colors.muted, borderRadius: 8, padding: spacing[3], marginBottom: spacing[4], alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={{ color: colors.onSurfaceVariant, marginTop: spacing[2], fontSize: typography.fontSize.sm }}>Menyimpan...</Text>
+        </View>
+      )}
       <Field
         label="Judul"
         value={judul}
@@ -65,20 +84,26 @@ export function EditScreen({ route, navigation }) {
         editable={!busy}
         error={validate(judul, nominal)}
       />
-      <Text style={s.note}>Kategori, tanggal, dan catatan tidak dapat diedit.</Text>
+      <Text style={[s.note, { color: colors.mutedForeground, fontSize: typography.fontSize.xs, marginTop: spacing[2], marginBottom: spacing[4] }]}>
+        Kategori, tanggal, dan catatan tidak dapat diedit.
+      </Text>
       <Tombol
         title={busy ? 'Menyimpan...' : 'Simpan'}
         onPress={save}
         disabled={busy || !judul.trim() || !nominal}
+        size="lg"
+        variant="primary"
+        loading={busy}
+        fullWidth
       />
     </ScrollView>
   );
 }
 
 const s = StyleSheet.create({
-  page: { flex: 1, padding: 16, backgroundColor: '#F8FAFC' },
-  heading: { fontSize: 24, fontWeight: '700', color: '#0F172A', marginBottom: 16 },
-  label: { fontSize: 16, marginTop: 16, marginBottom: 8 },
-  note: { fontSize: 14, color: '#64748B', marginBottom: 16 },
-  error: { color: '#B91C1C', marginVertical: 8, fontSize: 16 },
+  page: { flex: 1, padding: 16 },
+  heading: {},
+  errorBanner: {},
+  loadingBanner: {},
+  note: {},
 });

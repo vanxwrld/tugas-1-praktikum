@@ -1,14 +1,19 @@
 // src/screens/HomeScreen.js
-import { View, Text, FlatList, ActivityIndicator, Alert, BackHandler } from 'react-native';
+// Themed Home screen — list, pull-to-refresh, empty/loading/error states
+
+import { View, Text, FlatList, ActivityIndicator, Alert, BackHandler, RefreshControl, StyleSheet } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
+import { useTheme } from '../theme/ThemeContext';
 import { api } from '../api';
 import { rupiah, tanggalLokal } from '../helpers';
 import { Tombol } from '../components/Button';
 import { KartuPengeluaran } from '../components/KartuPengeluaran';
 
 export function HomeScreen({ navigation }) {
+  const { colors, spacing, typography, shadows } = useTheme();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const lock = useRef(false);
 
@@ -41,17 +46,38 @@ export function HomeScreen({ navigation }) {
     } finally {
       lock.current = false;
       setLoading(false);
+      setRefreshing(false);
     }
   }
 
+  const onRefresh = () => { setRefreshing(true); load(); };
+
   return (
-    <View style={s.page}>
-      <Text style={s.heading}>Pengeluaran</Text>
-      {error ? <Text style={s.error}>{error}</Text> : null}
-      {loading ? <ActivityIndicator size="large" /> : null}
-      <Tombol title="Tambah pengeluaran" onPress={() => navigation.navigate('Add')} disabled={loading} />
-      <Tombol title="Muat ulang" onPress={load} disabled={loading} />
-      {items.length === 0 && !loading && !error ? <Text>Belum ada pengeluaran.</Text> : null}
+    <View style={[s.page, { backgroundColor: colors.background }]}>
+      <Text style={[s.heading, { color: colors.onSurface, fontSize: typography.fontSize['2xl'], fontWeight: typography.fontWeight.bold, marginBottom: spacing[4] }]}>
+        Pengeluaran
+      </Text>
+      {error && (
+        <View style={[s.errorBanner, { backgroundColor: colors.errorLight, borderColor: colors.error, borderWidth: 1, borderRadius: 8, padding: spacing[3], marginBottom: spacing[4] }]}>
+          <Text style={{ color: colors.error, fontSize: typography.fontSize.sm }}>{error}</Text>
+        </View>
+      )}
+      <Tombol
+        title="Tambah pengeluaran"
+        onPress={() => navigation.navigate('Add')}
+        disabled={loading}
+        size="lg"
+        variant="primary"
+        fullWidth
+      />
+      <Tombol
+        title="Muat ulang"
+        onPress={load}
+        disabled={loading}
+        variant="outline"
+        size="md"
+        fullWidth
+      />
       <FlatList
         data={items}
         keyExtractor={(item) => String(item.id)}
@@ -61,15 +87,27 @@ export function HomeScreen({ navigation }) {
             onPress={(id) => navigation.navigate('Detail', { id })}
           />
         )}
-        refreshing={loading}
-        onRefresh={load}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        ListEmptyComponent={
+          !loading && !error && items.length === 0 && (
+            <View style={[s.emptyState, { alignItems: 'center', paddingVertical: spacing[10] }]}>
+              <Text style={{ color: colors.mutedForeground, fontSize: typography.fontSize.lg, marginBottom: spacing[2] }}>Belum ada pengeluaran</Text>
+              <Text style={{ color: colors.mutedForeground, fontSize: typography.fontSize.sm, textAlign: 'center', paddingHorizontal: spacing[6] }}>
+                Tekan "Tambah pengeluaran" untuk memulai
+              </Text>
+            </View>
+          )
+        }
+        contentContainerStyle={{ paddingBottom: spacing[6] }}
       />
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  page: { flex: 1, padding: 16, paddingTop: 60, backgroundColor: '#F8FAFC' },
-  heading: { fontSize: 24, fontWeight: '700', color: '#0F172A', marginBottom: 16 },
-  error: { color: '#B91C1C', marginVertical: 8, fontSize: 16 },
+  page: { flex: 1, padding: 16, paddingTop: 0 },
+  heading: {},
+  errorBanner: {},
+  emptyState: {},
 });
