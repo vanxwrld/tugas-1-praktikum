@@ -1,0 +1,23 @@
+{
+  "name": "api-pengeluaran",
+  "version": "1.0.0",
+  "main": "src/api/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/api/server.js",
+    "dev": "nodemon src/api/server.js"
+  },
+  "keywords": ["mobile", "pengeluaran", "backend", "node", "express", "api"],
+  "author": "",
+  "license": "ISC",
+  "description": "Backend API untuk aplikasi mobile PengeluaranKu",
+  "dependencies": {
+    "express": "4.21.2",
+    "mysql2": "3.12.0",
+    "dotenv": "16.4.8",
+    "cors": "2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "3.0.9"
+  }
+}
